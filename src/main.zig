@@ -2,15 +2,23 @@ const rl = @import("raylib");
 const std = @import("std");
 
 const Gun = struct {
+    pos_x: i32,
+    pos_y: i32,
     width: i32,
     height: i32,
-    pos_x: i32,
-    pos_y: i32,
 };
 const Bullet = struct {
-    vel_y: i32,
     pos_x: i32,
     pos_y: i32,
+    vel_y: i32,
+};
+const Ball = struct {
+    pos_x: i32,
+    pos_y: i32,
+    vel_x: i32,
+    vel_y: i32,
+    base_point: i32,
+    current_point: i32,
 };
 
 pub fn main() anyerror!void {
@@ -25,12 +33,30 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
 
     // Initialization
+    const game_text = "White Flower";
+
     var gun = Gun{
-        .width = 50,
-        .height = 50,
         .pos_x = @divExact(screenWidth, 2),
         .pos_y = screenHeight - 100,
+        .width = 50,
+        .height = 50,
     };
+
+    const ball = Ball{
+        .pos_x = @divExact(screenWidth, 2),
+        .pos_y = 100,
+        .vel_x = 50,
+        .vel_y = 50,
+        .base_point = 100,
+        .current_point = 100,
+    };
+
+    const single_bullet = Bullet{
+        .pos_x = 100,
+        .pos_y = 100,
+        .vel_y = 100,
+    };
+    const bullets = [5]Bullet{ single_bullet, single_bullet, single_bullet, single_bullet, single_bullet };
 
     // Game loop
     while (!rl.windowShouldClose()) {
@@ -44,35 +70,24 @@ pub fn main() anyerror!void {
         defer rl.endDrawing();
 
         rl.clearBackground(rl.Color.black);
-        rl.drawRectangle(
-            0,
-            screenHeight - 50,
-            screenWidth,
-            50,
-            rl.Color.dark_green,
-        );
 
-        rl.drawRectangle(
-            gun.pos_x,
-            gun.pos_y,
-            gun.width,
-            gun.height,
-            rl.Color.pink,
-        ); // gun
+        rl.drawRectangle(0, screenHeight - 50, screenWidth, 50, rl.Color.dark_green);
+        // gun
+        rl.drawRectangle(gun.pos_x, gun.pos_y, gun.width, gun.height, rl.Color.pink);
 
-        rl.drawCircle(
-            screenWidth / 2,
-            screenHeight / 2,
-            3,
-            rl.Color.white,
-        ); // center
+        // ball
+        rl.drawCircle(ball.pos_x, ball.pos_y, 15, rl.Color.red);
 
-        rl.drawText(
-            "White Flower",
-            screenWidth / 2,
-            screenHeight / 2,
-            20,
-            rl.Color.light_gray,
-        );
+        // TODO: fix this shit
+        const integer = try std.fmt.parseInt(i32, ball.current_point, 10);
+        std.debug.print("test num = {}\n", .{integer});
+        // rl.drawText(integer, ball.pos_x, ball.pos_y, 20, rl.Color.white);
+
+        // bullets
+        for (bullets) |bullet| {
+            rl.drawCircle(bullet.pos_x, bullet.pos_y, 15, rl.Color.yellow);
+        }
+
+        rl.drawText(game_text, screenWidth / 2 - game_text.len / 2 * 10, game_text.len / 2, 20, rl.Color.light_gray);
     }
 }
