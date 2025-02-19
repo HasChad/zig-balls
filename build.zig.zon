@@ -1,0 +1,18 @@
+.{
+    .name = "zig-balls",
+    .version = "0.0.0",
+    .dependencies = .{
+        .@"raylib-zig" = .{
+            .url = "git+https://github.com/Not-Nik/raylib-zig?ref=devel#4d452b2bcd0157199d07c70d79d4f84e6f8bd659",
+            .hash = "1220c531f8d0bfbc18944b6084916c520834a951520a8c033fc576fef8b240ee0fc2",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        // For example...
+        //"LICENSE",
+        //"README.md",
+    },
+}
