@@ -8,6 +8,7 @@ const Gun = struct {
     height: i32,
 };
 const Bullet = struct {
+    index: i32,
     pos_x: i32,
     pos_y: i32,
     vel_y: i32,
@@ -20,6 +21,8 @@ const Ball = struct {
     base_point: i32,
     current_point: i32,
 };
+
+const Gravity = 1;
 
 pub fn main() anyerror!void {
     const screenWidth = 500;
@@ -42,16 +45,17 @@ pub fn main() anyerror!void {
         .height = 50,
     };
 
-    const ball = Ball{
+    var ball = Ball{
         .pos_x = @divExact(screenWidth, 2),
         .pos_y = 100,
-        .vel_x = 50,
-        .vel_y = 50,
+        .vel_x = 4,
+        .vel_y = 0,
         .base_point = 100,
         .current_point = 100,
     };
 
     const single_bullet = Bullet{
+        .index = 1,
         .pos_x = 100,
         .pos_y = 100,
         .vel_y = 100,
@@ -60,12 +64,29 @@ pub fn main() anyerror!void {
 
     // Game loop
     while (!rl.windowShouldClose()) {
-        // Update
+        // ! Update
         // std.debug.print("mouse x pos = {}\n", .{rl.getMouseX()});
 
         gun.pos_x = rl.getMouseX() - @divExact(gun.width, 2);
 
-        // Draw
+        ball.vel_y += Gravity;
+        ball.pos_y += ball.vel_y;
+        ball.pos_x += ball.vel_x;
+
+        if (ball.pos_y > screenHeight - 50) {
+            ball.pos_y = screenHeight - 50;
+            ball.vel_y = -ball.vel_y;
+        }
+
+        if (ball.pos_x < 0) {
+            ball.vel_x = -ball.vel_x;
+        }
+
+        if (ball.pos_x > screenWidth) {
+            ball.vel_x = -ball.vel_x;
+        }
+
+        // ! Draw
         rl.beginDrawing();
         defer rl.endDrawing();
 
@@ -79,13 +100,12 @@ pub fn main() anyerror!void {
         rl.drawCircle(ball.pos_x, ball.pos_y, 15, rl.Color.red);
 
         // TODO: fix this shit
-        const integer = try std.fmt.parseInt(i32, ball.current_point, 10);
-        std.debug.print("test num = {}\n", .{integer});
+        // const integer = try std.fmt.parseInt(i32, ball.current_point, 10);
         // rl.drawText(integer, ball.pos_x, ball.pos_y, 20, rl.Color.white);
 
         // bullets
         for (bullets) |bullet| {
-            rl.drawCircle(bullet.pos_x, bullet.pos_y, 15, rl.Color.yellow);
+            rl.drawLine(bullet.pos_x, bullet.pos_y, bullet.pos_x, bullet.pos_y + 15, rl.Color.yellow);
         }
 
         rl.drawText(game_text, screenWidth / 2 - game_text.len / 2 * 10, game_text.len / 2, 20, rl.Color.light_gray);
