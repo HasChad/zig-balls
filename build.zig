@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) void {
     });
 
     // ! raylib things ----------------------
-    const raylib_dep = b.dependency("raylib-zig", .{
+    const raylib_dep = b.dependency("raylib_zig", .{
         .target = target,
         .optimize = optimize,
     });

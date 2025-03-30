@@ -1,18 +1,16 @@
 .{
-    .name = "zig-balls",
+    .name = .zig_balls,
     .version = "0.0.0",
+    .fingerprint = 0xde08ac1efc6bef92,
     .dependencies = .{
-        .@"raylib-zig" = .{
-            .url = "git+https://github.com/Not-Nik/raylib-zig?ref=devel#4d452b2bcd0157199d07c70d79d4f84e6f8bd659",
-            .hash = "1220c531f8d0bfbc18944b6084916c520834a951520a8c033fc576fef8b240ee0fc2",
+        .raylib_zig = .{
+            .url = "git+https://github.com/Not-Nik/raylib-zig?ref=devel#17a1754271ab440395256002cd7ae7a7d0a6f1cc",
+            .hash = "raylib_zig-5.6.0-dev-KE8REFguBQDFc0VjPFDWO3CbuH2toCGrPhxDSPkQ1wNc",
         },
     },
     .paths = .{
         "build.zig",
         "build.zig.zon",
         "src",
-        // For example...
-        //"LICENSE",
-        //"README.md",
     },
 }
