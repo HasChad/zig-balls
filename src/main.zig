@@ -1,11 +1,9 @@
 const rl = @import("raylib");
 const std = @import("std");
 
-const Gun = struct {
-    pos_x: i32,
-    pos_y: i32,
-    width: i32,
-    height: i32,
+const Player = struct {
+    pos: rl.Vector2,
+    size: rl.Vector2,
 };
 const Bullet = struct {
     index: i32,
@@ -15,22 +13,20 @@ const Bullet = struct {
     // is_active: bool,
 };
 const Ball = struct {
-    pos_x: i32,
-    pos_y: i32,
-    vel_x: i32,
-    vel_y: i32,
+    pos: rl.Vector2,
+    vel: rl.Vector2,
     base_point: i32,
     current_point: i32,
-    size: i32,
+    size: f32,
 };
 
 const Gravity = 1;
-
 pub fn main() anyerror!void {
     const screenWidth = 500;
-    const screenHeight = 500;
+    const screenHeight = 700;
 
     rl.initWindow(screenWidth, screenHeight, "Zig-Balls");
+    rl.setTargetFPS(60);
 
     // Defer is used to execute a statement upon exiting the current block.
     defer rl.closeWindow(); // Close window and OpenGL context
@@ -38,18 +34,14 @@ pub fn main() anyerror!void {
     rl.setTargetFPS(60);
 
     // Initialization
-    var gun = Gun{
-        .pos_x = @divExact(screenWidth, 2),
-        .pos_y = screenHeight - 100,
-        .width = 50,
-        .height = 50,
+    var player = Player{
+        .pos = rl.Vector2{ .x = @divExact(screenWidth, 2), .y = screenHeight - 100 },
+        .size = rl.Vector2{ .x = 50, .y = 50 },
     };
 
     var ball = Ball{
-        .pos_x = @divExact(screenWidth, 2),
-        .pos_y = 100,
-        .vel_x = 4,
-        .vel_y = 0,
+        .pos = rl.Vector2{ .x = @divExact(screenWidth, 2), .y = 100 },
+        .vel = rl.Vector2{ .x = 4, .y = 0 },
         .base_point = 100,
         .current_point = 100,
         .size = @as(f32, @floatFromInt(100)) / 2.0,
@@ -76,23 +68,23 @@ pub fn main() anyerror!void {
 
         rl.setWindowTitle(rl.textFormat("Zig-Balls - FPS: %i", .{rl.getFPS()}));
 
-        gun.pos_x = rl.getMouseX() - @divExact(gun.width, 2);
+        player.pos.x = @as(f32, @floatFromInt(rl.getMouseX())) - @divExact(player.size.x, 2);
 
-        ball.vel_y += Gravity;
-        ball.pos_y += ball.vel_y;
-        ball.pos_x += ball.vel_x;
+        ball.vel.y += Gravity;
+        ball.pos.y += ball.vel.y;
+        ball.pos.x += ball.vel.x;
 
-        if (ball.pos_y + ball.size > screenHeight - 50) {
-            ball.pos_y = screenHeight - 50 - ball.size;
-            ball.vel_y = -ball.vel_y;
+        if (ball.pos.y + ball.size > screenHeight - 50) {
+            ball.pos.y = screenHeight - 50 - ball.size;
+            ball.vel.y = -ball.vel.y;
         }
 
-        if (ball.pos_x - ball.size < 0) {
-            ball.vel_x = -ball.vel_x;
+        if (ball.pos.x - ball.size < 0) {
+            ball.vel.x = -ball.vel.x;
         }
 
-        if (ball.pos_x + ball.size > screenWidth) {
-            ball.vel_x = -ball.vel_x;
+        if (ball.pos.x + ball.size > screenWidth) {
+            ball.vel.x = -ball.vel.x;
         }
 
         // ! Draw
@@ -110,26 +102,23 @@ pub fn main() anyerror!void {
             rl.Color.dark_green,
         );
 
-        // gun
-        rl.drawRectangle(
-            gun.pos_x,
-            gun.pos_y,
-            gun.width,
-            gun.height,
+        // player
+        rl.drawRectangleV(
+            player.pos,
+            player.size,
             rl.Color.pink,
         );
 
         // ball
-        rl.drawCircle(
-            ball.pos_x,
-            ball.pos_y,
-            @as(f32, @floatFromInt(ball.size)),
+        rl.drawCircleV(
+            ball.pos,
+            ball.size,
             rl.Color.red,
         );
         rl.drawText(
             rl.textFormat("%i", .{ball.current_point}),
-            ball.pos_x - 15,
-            ball.pos_y - 10,
+            ball.pos.x - 15,
+            ball.pos.y - 10,
             20,
             rl.Color.white,
         );
@@ -138,9 +127,9 @@ pub fn main() anyerror!void {
         for (bullets) |bullet| {
             rl.drawLine(
                 bullet.pos_x,
-                bullet.pos_y,
+                bullet.pos.y,
                 bullet.pos_x,
-                bullet.pos_y + 15,
+                bullet.pos.y + 15,
                 rl.Color.yellow,
             );
         }
