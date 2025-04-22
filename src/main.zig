@@ -1,14 +1,14 @@
 const rl = @import("raylib");
 const std = @import("std");
 
+const Gravity = 1;
 const Player = struct {
     pos: rl.Vector2,
     size: rl.Vector2,
 };
 const Bullet = struct {
+    pos: rl.Vector2,
     index: i32,
-    pos_x: i32,
-    pos_y: i32,
     vel_y: i32,
     // is_active: bool,
 };
@@ -20,7 +20,6 @@ const Ball = struct {
     size: f32,
 };
 
-const Gravity = 1;
 pub fn main() anyerror!void {
     const screenWidth = 500;
     const screenHeight = 700;
@@ -33,7 +32,7 @@ pub fn main() anyerror!void {
 
     rl.setTargetFPS(60);
 
-    // Initialization
+    // ! Initialization
     var player = Player{
         .pos = rl.Vector2{ .x = @divExact(screenWidth, 2), .y = screenHeight - 100 },
         .size = rl.Vector2{ .x = 50, .y = 50 },
@@ -48,11 +47,11 @@ pub fn main() anyerror!void {
     };
 
     const single_bullet = Bullet{
+        .pos = rl.Vector2{ .x = 100, .y = 100 },
         .index = 1,
-        .pos_x = 100,
-        .pos_y = 100,
         .vel_y = 100,
     };
+
     const bullets = [5]Bullet{
         single_bullet,
         single_bullet,
@@ -90,7 +89,6 @@ pub fn main() anyerror!void {
         // ! Draw
         rl.beginDrawing();
         defer rl.endDrawing();
-
         rl.clearBackground(rl.Color.black);
 
         // ground
@@ -115,21 +113,14 @@ pub fn main() anyerror!void {
             ball.size,
             rl.Color.red,
         );
-        rl.drawText(
-            rl.textFormat("%i", .{ball.current_point}),
-            ball.pos.x - 15,
-            ball.pos.y - 10,
-            20,
-            rl.Color.white,
-        );
+        //rl.drawTextEx(rl.font, rl.textFormat("%i", .{ball.current_point}), ball.pos, 20, 0, rl.Color.white);
 
         // bullets
         for (bullets) |bullet| {
-            rl.drawLine(
-                bullet.pos_x,
-                bullet.pos.y,
-                bullet.pos_x,
-                bullet.pos.y + 15,
+            rl.drawLineEx(
+                bullet.pos,
+                rl.Vector2{ .x = bullet.pos.x, .y = bullet.pos.y - 20.0 },
+                2,
                 rl.Color.yellow,
             );
         }
