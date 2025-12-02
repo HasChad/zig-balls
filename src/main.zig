@@ -24,8 +24,8 @@ const Ball = struct {
 pub fn main() anyerror!void {
     const screenWidth = 500;
     const screenHeight = 700;
-    const allocator = std.heap.page_allocator;
-    const gpa = std.heap.page_allocator;
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "Zig-Balls");
     rl.setTargetFPS(60);
@@ -52,8 +52,8 @@ pub fn main() anyerror!void {
     // var ball_hashmap = std.AutoHashMap(Ball).init(gpa);
     // defer ball_hashmap.deinit();
 
-    var bullet_list = std.ArrayList(Bullet).init(allocator);
-    defer bullet_list.deinit();
+    var bullet_list = std.ArrayList(Bullet).empty;
+    defer bullet_list.deinit(allocator);
 
     // Game loop
     while (!rl.windowShouldClose()) {
@@ -62,7 +62,7 @@ pub fn main() anyerror!void {
         rl.setWindowTitle(rl.textFormat("Zig-Balls - FPS: %i", .{rl.getFPS()}));
 
         if (rl.isMouseButtonDown(.left)) {
-            try bullet_list.append(Bullet{
+            try bullet_list.append(allocator, Bullet{
                 .pos = Vec2{
                     .x = player.pos.x + player.size.x / 2,
                     .y = player.pos.y,
