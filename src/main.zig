@@ -1,7 +1,10 @@
 const std = @import("std");
 const rl = @import("raylib");
+const draw = @import("draw.zig");
 const Vec2 = rl.Vector2;
 
+pub const screenWidth = 500;
+pub const screenHeight = 700;
 const Gravity = 0.3;
 const Player = struct {
     pos: Vec2,
@@ -21,147 +24,94 @@ const Ball = struct {
     size: f32,
 };
 
+pub const App = struct {
+    player: Player,
+    bullets: std.ArrayList(Bullet),
+    ball: Ball,
+};
+
 pub fn main() anyerror!void {
-    const screenWidth = 500;
-    const screenHeight = 700;
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "Zig-Balls");
+    defer rl.closeWindow();
     rl.setTargetFPS(60);
 
-    // Defer is used to execute a statement upon exiting the current block.
-    defer rl.closeWindow(); // Close window and OpenGL context
-
-    rl.setTargetFPS(60);
-
-    // ! Initialization
-    var player = Player{
-        .pos = Vec2{ .x = @divExact(screenWidth, 2), .y = screenHeight - 100 },
-        .size = Vec2{ .x = 50, .y = 50 },
+    var app = App{
+        .player = Player{
+            .pos = Vec2{ .x = @divExact(screenWidth, 2), .y = screenHeight - 100 },
+            .size = Vec2{ .x = 50, .y = 50 },
+        },
+        .ball = Ball{
+            .pos = Vec2{ .x = @divExact(screenWidth, 2), .y = 100 },
+            .vel = Vec2{ .x = 4, .y = 0 },
+            .base_point = 100,
+            .current_point = 100,
+            .size = @as(f32, @floatFromInt(100)) / 2.0,
+        },
+        .bullets = std.ArrayList(Bullet).empty,
     };
 
-    var ball = Ball{
-        .pos = Vec2{ .x = @divExact(screenWidth, 2), .y = 100 },
-        .vel = Vec2{ .x = 4, .y = 0 },
-        .base_point = 100,
-        .current_point = 100,
-        .size = @as(f32, @floatFromInt(100)) / 2.0,
-    };
+    defer app.bullets.deinit(allocator);
 
-    // var ball_hashmap = std.AutoHashMap(Ball).init(gpa);
-    // defer ball_hashmap.deinit();
-
-    var bullet_list = std.ArrayList(Bullet).empty;
-    defer bullet_list.deinit(allocator);
-
-    // Game loop
     while (!rl.windowShouldClose()) {
         // ! Update
         // std.debug.print("mouse x pos = {}\n", .{rl.getMouseX()});
         rl.setWindowTitle(rl.textFormat("Zig-Balls - FPS: %i", .{rl.getFPS()}));
 
         if (rl.isMouseButtonDown(.left)) {
-            try bullet_list.append(allocator, Bullet{
+            try app.bullets.append(allocator, Bullet{
                 .pos = Vec2{
-                    .x = player.pos.x + player.size.x / 2,
-                    .y = player.pos.y,
+                    .x = app.player.pos.x + app.player.size.x / 2,
+                    .y = app.player.pos.y,
                 },
                 .vel_y = 10.0,
                 .ttl = 1.0,
             });
         }
 
-        var i: usize = bullet_list.items.len;
+        var i: usize = app.bullets.items.len;
         while (i > 0) {
             i -= 1;
-            bullet_list.items[i].ttl -= rl.getFrameTime();
+            app.bullets.items[i].ttl -= rl.getFrameTime();
 
-            if (bullet_list.items[i].ttl < 0.0) {
-                _ = bullet_list.orderedRemove(i);
+            if (app.bullets.items[i].ttl < 0.0) {
+                _ = app.bullets.orderedRemove(i);
                 continue;
             } else {
-                bullet_list.items[i].pos.y -= bullet_list.items[i].vel_y;
+                app.bullets.items[i].pos.y -= app.bullets.items[i].vel_y;
             }
 
-            const pos_X = bullet_list.items[i].pos.x - ball.pos.x;
-            const pos_Y = bullet_list.items[i].pos.y - ball.pos.y;
+            const pos_X = app.bullets.items[i].pos.x - app.ball.pos.x;
+            const pos_Y = app.bullets.items[i].pos.y - app.ball.pos.y;
 
-            if (std.math.sqrt(pos_X * pos_X + pos_Y * pos_Y) < ball.size) {
-                ball.current_point -= 1;
-                _ = bullet_list.orderedRemove(i);
+            if (std.math.sqrt(pos_X * pos_X + pos_Y * pos_Y) < app.ball.size) {
+                app.ball.current_point -= 1;
+                _ = app.bullets.orderedRemove(i);
             }
-
-            // add ball split or die
         }
 
-        player.pos.x = @as(f32, @floatFromInt(rl.getMouseX())) - @divExact(player.size.x, 2);
+        app.player.pos.x = @as(f32, @floatFromInt(rl.getMouseX())) - @divExact(app.player.size.x, 2);
 
-        ball.vel.y += Gravity;
-        ball.pos.y += ball.vel.y;
-        ball.pos.x += ball.vel.x;
+        app.ball.vel.y += Gravity;
+        app.ball.pos.y += app.ball.vel.y;
+        app.ball.pos.x += app.ball.vel.x;
 
-        if (ball.pos.y + ball.size > screenHeight - 50) {
-            ball.pos.y = screenHeight - 50 - ball.size;
-            ball.vel.y = -ball.vel.y;
+        if (app.ball.pos.y + app.ball.size > screenHeight - 50) {
+            app.ball.pos.y = screenHeight - 50 - app.ball.size;
+            app.ball.vel.y = -app.ball.vel.y;
         }
 
-        if (ball.pos.x - ball.size < 0) {
-            ball.vel.x = -ball.vel.x;
+        if (app.ball.pos.x - app.ball.size < 0) {
+            app.ball.vel.x = -app.ball.vel.x;
         }
 
-        if (ball.pos.x + ball.size > screenWidth) {
-            ball.vel.x = -ball.vel.x;
+        if (app.ball.pos.x + app.ball.size > screenWidth) {
+            app.ball.vel.x = -app.ball.vel.x;
         }
 
         // ! Draw
-        rl.beginDrawing();
-        defer rl.endDrawing();
-        rl.clearBackground(rl.Color.black);
-
-        // ground
-        rl.drawRectangle(
-            0,
-            screenHeight - 50,
-            screenWidth,
-            50,
-            rl.Color.dark_green,
-        );
-
-        // player
-        rl.drawRectangleV(
-            player.pos,
-            player.size,
-            rl.Color.pink,
-        );
-
-        // ball
-        rl.drawCircleV(
-            ball.pos,
-            ball.size,
-            rl.Color.red,
-        );
-
-        drawCenteredText(rl.textFormat("%i", .{ball.current_point}), @intFromFloat(ball.pos.x), @intFromFloat(ball.pos.y), 20, rl.Color.white);
-
-        // bullets
-        for (bullet_list.items) |bullet| {
-            rl.drawCircleV(
-                bullet.pos,
-                3,
-                rl.Color.yellow,
-            );
-        }
+        draw.draw_game(app);
     }
-}
-
-pub fn drawCenteredText(text: [:0]const u8, centerX: i32, y: i32, fontSize: i32, color: rl.Color) void {
-    const textWidth = rl.measureText(text, fontSize);
-    rl.drawText(
-        text,
-        centerX - @divTrunc(textWidth, 2),
-        y - @divExact(fontSize, 2),
-        fontSize,
-        color,
-    );
 }
