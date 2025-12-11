@@ -9,8 +9,8 @@ pub fn draw_game(app: main.App) void {
     // ground
     rl.drawRectangle(
         0,
-        main.screenHeight - 50,
-        main.screenWidth,
+        main.SCREEN_HEIGHT - 50,
+        main.SCREEN_WIDTH,
         50,
         rl.Color.dark_green,
     );
